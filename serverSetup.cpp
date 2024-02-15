@@ -4,12 +4,12 @@
 #include <netinet/in.h>
 #include "sqlite3.h"
 #include <unistd.h>
+#include "clientSetup.cpp"
+#include "initializeDatabase.cpp"
+#include "handleClient.cpp"
+
 
 #define SERVER_PORT 2025
-
-// Function prototypes
-void initializeDatabase();
-void handleClient(int clientSocket);
 
 int main() {
     int serverSocket, clientSocket;
