@@ -49,9 +49,6 @@ void initializeDatabase() {
         std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
     }
-
-    // Close database
-    // sqlite3_close(db);
 }
 
 // Helper functions
@@ -227,23 +224,25 @@ void processSellCommand(int clientSocket, const std::string& command) {
     }
 }
 
-void processListCommand(int clientSocket) {
-    // Ensure SQL is correct and db is properly initialized
-    std::string sqlListStocks = "SELECT stock_symbol, stock_balance FROM Stocks;";
+void processListCommand(int clientSocket) { // working
+    // Updated SQL query to include user_id and order by ID for enumeration
+    std::string sqlListStocks = "SELECT ID, stock_symbol, stock_balance, user_id FROM Stocks ORDER BY ID;";
     char* errMsg = nullptr;
 
-    // Use a lambda or a function for the callback that formats the response correctly
+    std::string response = "200 OK\nThe list of records in the Stocks database:\n";
+
+    // Define the callback function directly (if using C++11 or later)
     auto callback = [](void* data, int argc, char** argv, char** azColName) -> int {
         std::string* response = static_cast<std::string*>(data);
         for (int i = 0; i < argc; i++) {
-            if (i > 0) *response += ", ";
-            *response += std::string(azColName[i]) + ": " + (argv[i] ? argv[i] : "NULL");
+            // Append each column value followed by a space (or newline for the last column)
+            *response += std::string(argv[i] ? argv[i] : "NULL") + " ";
         }
-        *response += "\n";
+        *response += "\n"; // Separate records by a newline
         return 0;
     };
 
-    std::string response = "Stocks List:\n";
+    // Execute the SQL query and use the callback to format the response
     if (sqlite3_exec(db, sqlListStocks.c_str(), callback, &response, &errMsg) != SQLITE_OK) {
         std::cerr << "SQL error: " << errMsg << std::endl;
         sqlite3_free(errMsg);
@@ -251,6 +250,7 @@ void processListCommand(int clientSocket) {
         sendMessage(clientSocket, response);
     }
 }
+
 
 void processBalanceCommand(int clientSocket, const std::string& command) {
     std::istringstream iss(command);
@@ -263,7 +263,7 @@ void processBalanceCommand(int clientSocket, const std::string& command) {
     sendMessage(clientSocket, "200 OK\n" + balanceResponse);
 }
 
-void processShutdownCommand(int clientSocket) {
+void processShutdownCommand(int clientSocket) { //working
     sendMessage(clientSocket, "200 OK\nServer shutting down\n");
     // Close the database connection
     if (db) {
@@ -273,7 +273,7 @@ void processShutdownCommand(int clientSocket) {
     exit(0); // Use with caution; this will terminate the server process
 }
 
-void processQuitCommand(int clientSocket) {
+void processQuitCommand(int clientSocket) { // working
     sendMessage(clientSocket, "200 OK\n");
     usleep(100000);
     // No further logic required for QUIT, as the connection will be closed afterward
