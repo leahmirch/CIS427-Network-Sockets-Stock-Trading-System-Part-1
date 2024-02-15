@@ -1,14 +1,60 @@
 #include <iostream>
-#include <sstream>
-#include <unistd.h>
 #include <cstring>
-#include <algorithm>
-#include "sqlite3.h"
-#include <iomanip> // For std::setprecision
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include "sqlite3.h"
+#include <unistd.h>
+#include <sstream>
+#include <algorithm>
+#include <iomanip>
 
-
+#define SERVER_PORT 2025
 #define BUFFER_SIZE 1024
+
+void initializeDatabase() {
+    sqlite3 *db;
+    char *errMsg = 0;
+    int rc;
+
+    rc = sqlite3_open("stock_trading.db", &db);
+    if (rc) {
+        std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
+        return;
+    }
+
+    // Create Users table
+    const char *createUsersTableSQL = 
+        "CREATE TABLE IF NOT EXISTS Users ("
+        "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "first_name TEXT, "
+        "last_name TEXT, "
+        "user_name TEXT NOT NULL, "
+        "password TEXT, "
+        "usd_balance DOUBLE NOT NULL);";
+
+    // Create Stocks table
+    const char *createStocksTableSQL = 
+        "CREATE TABLE IF NOT EXISTS Stocks ("
+        "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "stock_symbol VARCHAR(4) NOT NULL, "
+        "stock_name VARCHAR(20) NOT NULL, "
+        "stock_balance DOUBLE, "
+        "user_id INTEGER, "
+        "FOREIGN KEY(user_id) REFERENCES Users(ID));";
+
+    // Execute SQL for table creation
+    sqlite3_exec(db, createUsersTableSQL, 0, 0, &errMsg);
+    sqlite3_exec(db, createStocksTableSQL, 0, 0, &errMsg);
+
+    if (errMsg != 0) {
+        std::cerr << "SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    }
+
+    // Close database
+    sqlite3_close(db);
+}
+
 
 sqlite3* db;
 
@@ -109,8 +155,6 @@ int fetchInfoCallback(void *data, int argc, char **argv, char **azColName) {
     }
     return 0;
 }
-
-
 
 void processBuyCommand(int clientSocket, const std::string& command) {
     std::istringstream iss(command);
@@ -215,4 +259,47 @@ void processShutdownCommand(int clientSocket) {
 void processQuitCommand(int clientSocket) {
     sendMessage(clientSocket, "200 OK\n");
     // No further logic required for QUIT, as the connection will be closed afterward
+}
+
+
+
+
+int main() {
+    int serverSocket, clientSocket;
+    struct sockaddr_in serverAddr, clientAddr;
+    socklen_t addrSize;
+
+    // Initialize SQLite database
+    initializeDatabase();
+
+    // Create socket
+    serverSocket = socket(PF_INET, SOCK_STREAM, 0);
+    memset(&serverAddr, 0, sizeof(serverAddr));
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(SERVER_PORT);
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+
+    // Bind socket to port
+    bind(serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+
+    // Listen on the port
+    listen(serverSocket, 5);
+    std::cout << "Server listening on port " << SERVER_PORT << std::endl;
+
+    while (true) {
+        // Accept client connections
+        addrSize = sizeof(clientAddr);
+        clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddr, &addrSize);
+        std::cout << "Client connected." << std::endl;
+
+        // Handle client in a separate function or thread
+        handleClient(clientSocket);
+
+        // Close client socket
+        close(clientSocket);
+    }
+
+    // Close server socket and cleanup
+    close(serverSocket);
+    return 0;
 }
