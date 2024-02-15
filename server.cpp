@@ -11,12 +11,11 @@
 #define SERVER_PORT 2025
 #define BUFFER_SIZE 1024
 
-void initializeDatabase() {
-    sqlite3 *db;
-    char *errMsg = 0;
-    int rc;
+sqlite3* db; // Declare this globally at the top of your server.cpp file
 
-    rc = sqlite3_open("stock_trading.db", &db);
+void initializeDatabase() {
+    char *errMsg = 0;
+    int rc = sqlite3_open("stock_trading.db", &db); // Use the global db variable directly
     if (rc) {
         std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
         return;
@@ -52,11 +51,8 @@ void initializeDatabase() {
     }
 
     // Close database
-    sqlite3_close(db);
+    // sqlite3_close(db);
 }
-
-
-sqlite3* db;
 
 // Helper functions
 bool startsWith(const std::string& fullString, const std::string& prefix) {
@@ -95,14 +91,17 @@ void handleClient(int clientSocket) {
     char buffer[BUFFER_SIZE];
     bool isRunning = true;
 
-    while (isRunning) {
-        memset(buffer, 0, BUFFER_SIZE);
-        ssize_t bytesReceived = read(clientSocket, buffer, BUFFER_SIZE - 1);
+while (isRunning) {
+    memset(buffer, 0, BUFFER_SIZE);
+    ssize_t bytesReceived = read(clientSocket, buffer, BUFFER_SIZE - 1);
 
-        if (bytesReceived < 1) {
-            std::cout << "Client disconnected or read error" << std::endl;
-            break;
-        }
+    if (bytesReceived > 0) {
+        std::cout << "Server response: " << std::string(buffer, bytesReceived) << std::endl;
+    } 
+    else if (bytesReceived <= 0) {
+        std::cout << "Client disconnected." << std::endl;
+        break;
+    }
 
         std::string command(buffer);
         std::cout << "Received command: " << command << std::endl;
@@ -229,10 +228,28 @@ void processSellCommand(int clientSocket, const std::string& command) {
 }
 
 void processListCommand(int clientSocket) {
+    // Ensure SQL is correct and db is properly initialized
     std::string sqlListStocks = "SELECT stock_symbol, stock_balance FROM Stocks;";
-    std::string listResponse = "Stocks Owned:\n";
-    executeSQL(sqlListStocks, fetchInfoCallback, &listResponse);
-    sendMessage(clientSocket, "200 OK\n" + listResponse);
+    char* errMsg = nullptr;
+
+    // Use a lambda or a function for the callback that formats the response correctly
+    auto callback = [](void* data, int argc, char** argv, char** azColName) -> int {
+        std::string* response = static_cast<std::string*>(data);
+        for (int i = 0; i < argc; i++) {
+            if (i > 0) *response += ", ";
+            *response += std::string(azColName[i]) + ": " + (argv[i] ? argv[i] : "NULL");
+        }
+        *response += "\n";
+        return 0;
+    };
+
+    std::string response = "Stocks List:\n";
+    if (sqlite3_exec(db, sqlListStocks.c_str(), callback, &response, &errMsg) != SQLITE_OK) {
+        std::cerr << "SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    } else {
+        sendMessage(clientSocket, response);
+    }
 }
 
 void processBalanceCommand(int clientSocket, const std::string& command) {
@@ -258,6 +275,7 @@ void processShutdownCommand(int clientSocket) {
 
 void processQuitCommand(int clientSocket) {
     sendMessage(clientSocket, "200 OK\n");
+    usleep(100000);
     // No further logic required for QUIT, as the connection will be closed afterward
 }
 
@@ -284,7 +302,7 @@ int main() {
 
     // Listen on the port
     listen(serverSocket, 5);
-    std::cout << "Server listening on port " << SERVER_PORT << std::endl;
+    std::cout << "Server listening on port " << SERVER_PORT << "." << std::endl;
 
     while (true) {
         // Accept client connections
