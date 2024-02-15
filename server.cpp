@@ -78,7 +78,7 @@ void executeSQL(const std::string& sql, int (*callback)(void*, int, char**, char
 
 // Command processing functions
 void processBuyCommand(int clientSocket, const std::string& command);
-void processSellCommand(int clientSocket, const std::string& command);
+//void processSellCommand(int clientSocket, const std::string& command);
 void processListCommand(int clientSocket);
 void processBalanceCommand(int clientSocket, const std::string& command);
 void processShutdownCommand(int clientSocket);
@@ -106,7 +106,7 @@ while (isRunning) {
         if (startsWith(command, "BUY")) {
             processBuyCommand(clientSocket, command);
         } else if (startsWith(command, "SELL")) {
-            processSellCommand(clientSocket, command);
+            //processSellCommand(clientSocket, command);
         } else if (startsWith(command, "LIST")) {
             processListCommand(clientSocket);
         } else if (startsWith(command, "BALANCE")) {
@@ -120,12 +120,11 @@ while (isRunning) {
         } else {
             std::string errorMsg = "400 invalid command\n";
             write(clientSocket, errorMsg.c_str(), errorMsg.length());
+            std::cout << "Invalid command response sent. Ready for next command." << std::endl; // Debugging line
         }
     }
-
     close(clientSocket);
 }
-
 
 // Utility function to send messages to the client
 void sendMessage(int clientSocket, const std::string& message) {
@@ -144,54 +143,46 @@ int executeSQLWithCallback(const std::string& sql, int (*callback)(void*, int, c
 }
 
 // Callback function to fetch balance or stock information
-int fetchInfoCallback(void *data, int argc, char **argv, char **azColName) {
-    std::string* response = reinterpret_cast<std::string*>(data);
-    if (argc == 3) { // first_name, last_name, usd_balance
-        *response += "Balance for " + std::string(argv[0]) + " " + std::string(argv[1]) + ": $" + std::string(argv[2]) + "\n";
-    } else {
-        std::cout << "Unexpected argc value." << std::endl;
+int fetchBalanceCallback(void *data, int argc, char **argv, char **azColName) {
+    double* balance = reinterpret_cast<double*>(data);
+    if (argc > 0 && argv[0]) {
+        *balance = std::stod(argv[0]);
     }
     return 0;
 }
 
 void processBuyCommand(int clientSocket, const std::string& command) {
     std::istringstream iss(command);
-    std::string cmd, stockSymbol, userIdStr;
+    std::string cmd, stockSymbol;
     double stockAmount, pricePerStock;
     int userId;
     iss >> cmd >> stockSymbol >> stockAmount >> pricePerStock >> userId;
 
-    // Calculate total cost
     double totalCost = stockAmount * pricePerStock;
+    double currentBalance = 0;
 
-    // Check if user has enough balance
+    // Prepare the SQL query to fetch the user's balance
     std::string balanceQuery = "SELECT usd_balance FROM Users WHERE ID = " + std::to_string(userId) + ";";
-    std::string balanceResponse;
-    executeSQLWithCallback(balanceQuery, fetchInfoCallback, &balanceResponse);
-    
-    std::istringstream balanceStream(balanceResponse.substr(balanceResponse.find(":") + 1));
-    double currentBalance;
-    balanceStream >> currentBalance;
+
+    // Use the specific callback for fetching balance
+    executeSQLWithCallback(balanceQuery, fetchBalanceCallback, &currentBalance);
 
     if (currentBalance >= totalCost) {
-        // Deduct total cost from user's balance
-        std::string deductBalanceSql = "UPDATE Users SET usd_balance = usd_balance - " + std::to_string(totalCost) + " WHERE ID = " + std::to_string(userId) + ";";
-        executeSQL(deductBalanceSql);
+        // Proceed with updating the user's balance and stocks
+        std::string updateBalanceSql = "UPDATE Users SET usd_balance = usd_balance - " + std::to_string(totalCost) + " WHERE ID = " + std::to_string(userId) + ";";
+        executeSQL(updateBalanceSql);
 
-        // Update or insert stock record
-        std::string stockSql = "INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) VALUES ('" + stockSymbol + "', '', " + std::to_string(stockAmount) + ", " + std::to_string(userId) + ") ON CONFLICT(stock_symbol) DO UPDATE SET stock_balance = stock_balance + " + std::to_string(stockAmount) + ";";
-        executeSQL(stockSql);
+        // Check if the stock exists for the user, update or insert accordingly
+        std::string stockUpdateSql = "INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) VALUES ('" + stockSymbol + "', 'Unknown', " + std::to_string(stockAmount) + ", " + std::to_string(userId) + ") ON CONFLICT(stock_symbol) DO UPDATE SET stock_balance = stock_balance + excluded.stock_balance;";
+        executeSQL(stockUpdateSql);
 
-        // Fetch updated balance and stock amount
-        std::string updatedBalanceResponse;
-        executeSQLWithCallback(balanceQuery, fetchInfoCallback, &updatedBalanceResponse);
-        std::string response = "200 OK\nBOUGHT: New balance: " + updatedBalanceResponse;
-        sendMessage(clientSocket, response);
+        sendMessage(clientSocket, "200 OK\nBOUGHT: " + std::to_string(stockAmount) + " of " + stockSymbol + ". New balance: $" + std::to_string(currentBalance - totalCost) + "\n");
     } else {
         sendMessage(clientSocket, "Not enough balance\n");
     }
 }
 
+/*
 void processSellCommand(int clientSocket, const std::string& command) {
     std::istringstream iss(command);
     std::string cmd, stockSymbol, userIdStr, stockAmountStr, pricePerStockStr;
@@ -225,6 +216,7 @@ void processSellCommand(int clientSocket, const std::string& command) {
         sendMessage(clientSocket, "Stock record not found\n");
     }
 }
+*/
 
 void processListCommand(int clientSocket) { // working
     // Updated SQL query to include user_id and order by ID for enumeration
@@ -260,7 +252,8 @@ void processBalanceCommand(int clientSocket, const std::string& command) { // wo
 
     std::string sql = "SELECT first_name, last_name, usd_balance FROM Users WHERE ID = " + userIdStr + ";";
     std::string balanceResponse = ""; // Initialize empty to be filled by the callback
-    executeSQLWithCallback(sql, fetchInfoCallback, &balanceResponse);
+    executeSQLWithCallback(sql, fetchBalanceCallback, &balanceResponse);
+
     if (balanceResponse.empty()) {
         balanceResponse = "User not found or balance unavailable.";
     }
