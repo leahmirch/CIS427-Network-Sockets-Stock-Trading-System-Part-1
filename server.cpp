@@ -146,8 +146,10 @@ int executeSQLWithCallback(const std::string& sql, int (*callback)(void*, int, c
 // Callback function to fetch balance or stock information
 int fetchInfoCallback(void *data, int argc, char **argv, char **azColName) {
     std::string* response = reinterpret_cast<std::string*>(data);
-    for (int i = 0; i < argc; i++) {
-        if (argv[i]) *response += std::string(azColName[i]) + ": " + argv[i] + "\n";
+    if (argc == 3) { // first_name, last_name, usd_balance
+        *response += "Balance for " + std::string(argv[0]) + " " + std::string(argv[1]) + ": $" + std::string(argv[2]) + "\n";
+    } else {
+        std::cout << "Unexpected argc value." << std::endl;
     }
     return 0;
 }
@@ -251,19 +253,22 @@ void processListCommand(int clientSocket) { // working
     }
 }
 
-
-void processBalanceCommand(int clientSocket, const std::string& command) {
+void processBalanceCommand(int clientSocket, const std::string& command) { // working- enter as "BALANCE 1" for the balance of userID = 1
     std::istringstream iss(command);
     std::string cmd, userIdStr;
     iss >> cmd >> userIdStr;
 
-    std::string sql = "SELECT usd_balance FROM Users WHERE ID = " + userIdStr + ";";
-    std::string balanceResponse = "USD Balance:\n";
-    executeSQL(sql, fetchInfoCallback, &balanceResponse);
+    std::string sql = "SELECT first_name, last_name, usd_balance FROM Users WHERE ID = " + userIdStr + ";";
+    std::string balanceResponse = ""; // Initialize empty to be filled by the callback
+    executeSQLWithCallback(sql, fetchInfoCallback, &balanceResponse);
+    if (balanceResponse.empty()) {
+        balanceResponse = "User not found or balance unavailable.";
+    }
     sendMessage(clientSocket, "200 OK\n" + balanceResponse);
 }
 
-void processShutdownCommand(int clientSocket) { //working
+
+void processShutdownCommand(int clientSocket) { // working
     sendMessage(clientSocket, "200 OK\nServer shutting down\n");
     // Close the database connection
     if (db) {
