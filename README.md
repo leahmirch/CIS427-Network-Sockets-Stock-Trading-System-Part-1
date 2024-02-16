@@ -6,22 +6,46 @@
 This project is a simple stock trading simulation system built using C++ and SQLite for database management. It is designed to run on Unix-based systems, leveraging network programming techniques for client-server communication. The system allows users to buy and sell stocks, check their balance, and list available stocks.
 
 ### Running Instructions
-#### Compiling the Server Locally
+#### Running the Server on the UMD server:
+- connect to umd vpn
+```bash
+ssh lmirch@login.umd.umich.edu
+```
+    - Enter password
+    - Duo authenticate
+```bash
+cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+```
+```bash
+gcc -c sqlite3.c -o sqlite3.o -lpthread -ldl
+```
 ```bash
 g++ -g -o server server.cpp sqlite3.o -lpthread -ldl -std=c++11
 ```
-#### Running the Server
 ```bash
 ./server
 ```
-#### Compiling the Client
+
+#### Running the Client on the UMD Server
+- connect to umd vpn
+```bash
+ssh lmirch@login.umd.umich.edu
+```
+    - Enter password
+    - Duo authenticate
+```bash
+cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+```
+```bash
+gcc -c sqlite3.c -o sqlite3.o -lpthread -ldl
+```
 ```bash
 g++ -o client client.cpp -std=c++11
 ```
-#### Running the Client Locally
 ```bash
-./client 127.0.0.1
+./server
 ```
+
 #### Inserting Data into the Database
 ```bash
 sqlite3 stock_trading.db
@@ -33,7 +57,7 @@ SELECT * FROM Stocks;
 ```
 
 ### Each Student's Role
-- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. 
+- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp).
 
 ### Bugs in the Code
 - Database locks may occur if multiple clients try to access the database simultaneously. This is because SQLite's default configuration is not fully optimized for high concurrency. Database allows for multiple clients to access the server, but not to all do commands at once. 

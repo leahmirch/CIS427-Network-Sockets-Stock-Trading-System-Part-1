@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <Server IP Address>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << "141.215.93.223" << std::endl;
         return 1;
     }
 
