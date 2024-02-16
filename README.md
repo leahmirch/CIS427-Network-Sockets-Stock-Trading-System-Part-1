@@ -18,7 +18,7 @@ ssh lmirch@login.umd.umich.edu
 - Duo authenticate
 
 ```bash
-cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+cd /home/l/lmirch/Private/pa1LeahMirch/ *this is assuming the files are placed here*
 ```
 ```bash
 make clean
@@ -40,7 +40,7 @@ ssh lmirch@login.umd.umich.edu
 - Duo authenticate
 
 ```bash
-cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+cd /home/l/lmirch/Private/pa1LeahMirch/ *this is assuming the files are placed here*
 ```
 ```bash
 make runclient
@@ -56,7 +56,7 @@ ssh lmirch@login.umd.umich.edu
 - Duo authenticate
 
 ```bash
-cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+cd /home/l/lmirch/Private/pa1LeahMirch/ *this is assuming the files are placed here*
 ```
 ```bash
 sqlite3 stock_trading.db
