@@ -34,8 +34,8 @@ g++ -g -o server server.cpp sqlite3.o -lpthread -ldl -std=c++11
 ssh lmirch@login.umd.umich.edu
 ```
 
-    - Enter password
-    - Duo authenticate
+- Enter password
+- Duo authenticate
 
 ```bash
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
@@ -89,3 +89,7 @@ SELECT * FROM Stocks;
 
 ### Sample Run
 
+
+### Additional Information
+Below is the gitub link used within the project. This is so that we can have blame, show progress, and have an established location to transfer code between each other.
+https://github.com/leahmirch/code-base
