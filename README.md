@@ -12,8 +12,8 @@ This project is a simple stock trading simulation system built using C++ and SQL
 ssh lmirch@login.umd.umich.edu
 ```
 
-    - Enter password
-    - Duo authenticate
+- Enter password
+- Duo authenticate
 
 ```bash
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
