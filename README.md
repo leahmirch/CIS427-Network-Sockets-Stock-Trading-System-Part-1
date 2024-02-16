@@ -5,11 +5,12 @@
 - Dominic Baughman (baughboy@umich.edu)
 
 ### Introduction
-This project is a simple stock trading simulation system built using C++ and SQLite for database management. It is designed to run on Unix-based systems, leveraging network programming techniques for client-server communication. The system allows users to buy and sell stocks, check their balance, and list available stocks.
+In this first project for CIS 421, we integrated a Stock Trading System within the netowrk socket. We did this by using C++ for the main code and SQLite for all the database related components. This program uses network programming techniques and and a Unix based system to allow for the client and server to work together. The actions this system can take are BUY, SELL, LIST, BALANCE, SHUTDOWN, and QUIT. 
 
 ### Running Instructions
 #### Running the Server on the UMD server:
 - connect to umd vpn
+- connect using SSH client using "login.umd.umich.edu"
 ```bash
 ssh lmirch@login.umd.umich.edu
 ```
@@ -32,6 +33,7 @@ make runserver
 
 #### Running the Client on the UMD Server
 - connect to umd vpn
+- connect using SSH client using "login.umd.umich.edu"
 ```bash
 ssh lmirch@login.umd.umich.edu
 ```
@@ -48,6 +50,7 @@ make runclient
 
 #### Inserting Data into the Database
 - connect to umd vpn
+- connect using SSH client using "login.umd.umich.edu"
 ```bash
 ssh lmirch@login.umd.umich.edu
 ```
@@ -91,9 +94,7 @@ SELECT * FROM Stocks;
 
 ### Each Student's Role
 - Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp). Created the makefile, updated the readme with proper configuration settings.
-
-### Bugs in the Code
-- Database locks may occur if multiple clients try to access the database simultaneously. This is because SQLite's default configuration is not fully optimized for high concurrency. Database allows for multiple clients to access the server, but not to all do commands at once. 
+- Dominic Baughman: Made changes to the readme, designed a base for the makefile. 
 
 ### Commands Implemented
 - **BUY**: Purchase stocks, specifying the stock symbol, quantity, price, and user ID.
