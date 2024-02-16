@@ -102,8 +102,3 @@ SELECT * FROM Stocks;
 - **BALANCE**: Check the current balance and stock holdings of a specified user ID.
 - **SHUTDOWN**: Shut down the server gracefully.
 - **QUIT**: Disconnect the client from the server.
-
-### Additional Information
-Below is the gitub link used within the project. This is so that we can have blame, show progress, and have an established location to transfer code between each other.
-
-https://github.com/leahmirch/code-base
