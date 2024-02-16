@@ -1,3 +1,6 @@
+## CIS427 Winter 2024 Programming Assignment 1
+## Network Sockets - Stock Trading System
+
 ### Student Names and Emails
 - Leah Mirch (lmirch@umich.edu)
 - Dominic Baughman (baughboy@umich.edu)
@@ -112,4 +115,5 @@ SELECT * FROM Stocks;
 
 ### Additional Information
 Below is the gitub link used within the project. This is so that we can have blame, show progress, and have an established location to transfer code between each other.
+
 https://github.com/leahmirch/code-base
