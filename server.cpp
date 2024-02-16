@@ -1,3 +1,4 @@
+// Includes for various libraries required for network programming, database interaction, and string manipulation
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -8,20 +9,21 @@
 #include <algorithm>
 #include <iomanip>
 
-#define SERVER_PORT 2025
-#define BUFFER_SIZE 1024
+#define SERVER_PORT 2025 // Define the server port number
+#define BUFFER_SIZE 1024 // Define the buffer size for receiving commands
 
-sqlite3* db; // Declare this globally at the top of server.cpp file
+sqlite3* db; // Global variable for the database connection
 
+// Function to initialize the database and create necessary tables
 void initializeDatabase() {
     char *errMsg = 0;
-    int rc = sqlite3_open("stock_trading.db", &db); // Use the global db variable directly
+    int rc = sqlite3_open("stock_trading.db", &db); // Open or create the database
     if (rc) {
         std::cerr << "Can't open database: " << sqlite3_errmsg(db) << std::endl;
         return;
     }
 
-    // Create Users table
+    // SQL statements for creating Users and Stocks tables
     const char *createUsersTableSQL = 
         "CREATE TABLE IF NOT EXISTS Users ("
         "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -31,7 +33,6 @@ void initializeDatabase() {
         "password TEXT, "
         "usd_balance DOUBLE NOT NULL);";
 
-    // Create Stocks table
     const char *createStocksTableSQL = 
         "CREATE TABLE IF NOT EXISTS Stocks ("
         "ID INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -41,12 +42,29 @@ void initializeDatabase() {
         "user_id INTEGER, "
         "FOREIGN KEY(user_id) REFERENCES Users(ID));";
 
-    // Execute SQL for table creation
-    sqlite3_exec(db, createUsersTableSQL, 0, 0, &errMsg);
-    sqlite3_exec(db, createStocksTableSQL, 0, 0, &errMsg);
+    // Insert sample user if not exists
+    const char *insertSampleUserSQL =
+        "INSERT INTO Users (first_name, last_name, user_name, password, usd_balance) "
+        "SELECT 'Leah', 'Mirch', 'lmirch', 'Password!', 100.0 "
+        "WHERE NOT EXISTS (SELECT 1 FROM Users WHERE user_name = 'lmirch');";
 
+    // Insert sample stock if not exists
+    const char *insertSampleStockSQL =
+        "INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) "
+        "SELECT 'AAPL', 'Apple Inc.', 10, (SELECT ID FROM Users WHERE user_name = 'lmirch') "
+        "WHERE NOT EXISTS (SELECT 1 FROM Stocks WHERE stock_symbol = 'AAPL' AND user_id = (SELECT ID FROM Users WHERE user_name = 'lmirch'));";
+
+    // Execute the SQL for inserting sample data
+    sqlite3_exec(db, insertSampleUserSQL, 0, 0, &errMsg);
     if (errMsg != 0) {
-        std::cerr << "SQL error: " << errMsg << std::endl;
+        std::cerr << "SQL error on inserting sample user: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        errMsg = 0; // Reset error message pointer to avoid false positives on next operation
+    }
+
+    sqlite3_exec(db, insertSampleStockSQL, 0, 0, &errMsg);
+    if (errMsg != 0) {
+        std::cerr << "SQL error on inserting sample stock: " << errMsg << std::endl;
         sqlite3_free(errMsg);
     }
 }
@@ -316,9 +334,10 @@ int main() {
     // Initialize SQLite database
     initializeDatabase();
 
-    // Create socket
+    // Setup and Bind the server socket
     serverSocket = socket(PF_INET, SOCK_STREAM, 0);
     memset(&serverAddr, 0, sizeof(serverAddr));
+    // Initialize and set server address structure
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(SERVER_PORT);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
@@ -330,6 +349,7 @@ int main() {
     listen(serverSocket, 5);
     std::cout << "Server listening on port " << SERVER_PORT << "." << std::endl;
 
+    // main loop to accept and handle client connections
     while (true) {
         // Accept client connections
         addrSize = sizeof(clientAddr);
