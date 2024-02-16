@@ -11,7 +11,7 @@
 #define SERVER_PORT 2025
 #define BUFFER_SIZE 1024
 
-sqlite3* db; // Declare this globally at the top of your server.cpp file
+sqlite3* db; // Declare this globally at the top of server.cpp file
 
 void initializeDatabase() {
     char *errMsg = 0;
@@ -76,9 +76,8 @@ void executeSQL(const std::string& sql, int (*callback)(void*, int, char**, char
     }
 }
 
-// Command processing functions
 void processBuyCommand(int clientSocket, const std::string& command);
-//void processSellCommand(int clientSocket, const std::string& command);
+void processSellCommand(int clientSocket, const std::string& command);
 void processListCommand(int clientSocket);
 void processBalanceCommand(int clientSocket, const std::string& command);
 void processShutdownCommand(int clientSocket);
@@ -106,7 +105,7 @@ while (isRunning) {
         if (startsWith(command, "BUY")) {
             processBuyCommand(clientSocket, command);
         } else if (startsWith(command, "SELL")) {
-            //processSellCommand(clientSocket, command);
+            processSellCommand(clientSocket, command);
         } else if (startsWith(command, "LIST")) {
             processListCommand(clientSocket);
         } else if (startsWith(command, "BALANCE")) {
@@ -151,7 +150,32 @@ int fetchBalanceCallback(void *data, int argc, char **argv, char **azColName) {
     return 0;
 }
 
-void processBuyCommand(int clientSocket, const std::string& command) {
+struct CallbackData {
+    double stockAmount;
+    double pricePerStock;
+    int userId;
+    std::string stockSymbol;
+    std::string* response; // Point to a string to store the response message
+};
+
+int sellCallback(void *data, int argc, char **argv, char **azColName) {
+    CallbackData* cbData = static_cast<CallbackData*>(data);
+    // Now use cbData->stockAmount, cbData->pricePerStock, etc., inside  callback
+    return 0;
+}
+
+static int stockBalanceCallback(void *data, int argc, char **argv, char **azColName) {
+    if (argc > 0 && argv[0]) {
+        *(double *)data = atof(argv[0]);
+    }
+    return 0;
+}
+
+
+
+
+// process commands
+void processBuyCommand(int clientSocket, const std::string& command) { // working: ex. input BUY MSFT 3.4 1.35 1 (Where 3.4 is the amount of stocks to buy, $1.35 price per stock, 1 is the user id.
     std::istringstream iss(command);
     std::string cmd, stockSymbol;
     double stockAmount, pricePerStock;
@@ -176,47 +200,52 @@ void processBuyCommand(int clientSocket, const std::string& command) {
         std::string stockUpdateSql = "INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) VALUES ('" + stockSymbol + "', 'Unknown', " + std::to_string(stockAmount) + ", " + std::to_string(userId) + ") ON CONFLICT(stock_symbol) DO UPDATE SET stock_balance = stock_balance + excluded.stock_balance;";
         executeSQL(stockUpdateSql);
 
-        sendMessage(clientSocket, "200 OK\nBOUGHT: " + std::to_string(stockAmount) + " of " + stockSymbol + ". New balance: $" + std::to_string(currentBalance - totalCost) + "\n");
+        sendMessage(clientSocket, "200 OK\nBOUGHT: " + std::to_string(stockAmount) + " of " + stockSymbol + ". New USD balance: $" + std::to_string(currentBalance - totalCost) + "\n");
     } else {
         sendMessage(clientSocket, "Not enough balance\n");
     }
 }
 
-/*
-void processSellCommand(int clientSocket, const std::string& command) {
+void processSellCommand(int clientSocket, const std::string& command) { // working ex. SELL APPL 2 1.45 1
     std::istringstream iss(command);
-    std::string cmd, stockSymbol, userIdStr, stockAmountStr, pricePerStockStr;
-    iss >> cmd >> stockSymbol >> stockAmountStr >> pricePerStockStr >> userIdStr;
+    std::string cmd, stockSymbol;
+    double stockAmount, pricePerStock;
+    int userId;
+    iss >> cmd >> stockSymbol >> stockAmount >> pricePerStock >> userId;
 
-    double stockAmount = std::stod(stockAmountStr);
-    double pricePerStock = std::stod(pricePerStockStr);
-    int userId = std::stoi(userIdStr);
-    double totalCredit = stockAmount * pricePerStock;
+    // Calculate the total sale value
+    double saleValue = stockAmount * pricePerStock;
 
-    std::string sqlCheckStock = "SELECT stock_balance FROM Stocks WHERE stock_symbol = '" + stockSymbol + "' AND user_id = " + userIdStr + ";";
-    std::string stockResponse;
-    executeSQL(sqlCheckStock, fetchInfoCallback, &stockResponse);
-
-    if (!stockResponse.empty()) {
-        double currentStockAmount;
-        std::istringstream(stockResponse.substr(stockResponse.find(":") + 1)) >> currentStockAmount;
-
-        if (currentStockAmount >= stockAmount) {
-            std::string sqlUpdateStock = "UPDATE Stocks SET stock_balance = stock_balance - " + std::to_string(stockAmount) + " WHERE stock_symbol = '" + stockSymbol + "' AND user_id = " + userIdStr + ";";
-            executeSQL(sqlUpdateStock);
-
-            std::string sqlCreditBalance = "UPDATE Users SET usd_balance = usd_balance + " + std::to_string(totalCredit) + " WHERE ID = " + userIdStr + ";";
-            executeSQL(sqlCreditBalance);
-
-            sendMessage(clientSocket, "200 OK\nSOLD: " + stockAmountStr + " " + stockSymbol + ". New USD balance updated.\n");
-        } else {
-            sendMessage(clientSocket, "Not enough stock balance\n");
-        }
-    } else {
-        sendMessage(clientSocket, "Stock record not found\n");
+    // Update the user's USD balance directly without checking stock balance
+    std::string updateBalanceSql = "UPDATE Users SET usd_balance = usd_balance + " + std::to_string(saleValue) + " WHERE ID = " + std::to_string(userId) + ";";
+    
+    // Execute the update balance SQL command
+    char *errMsg = nullptr;
+    if (sqlite3_exec(db, updateBalanceSql.c_str(), nullptr, nullptr, &errMsg) != SQLITE_OK) {
+        std::cerr << "SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        sendMessage(clientSocket, "Failed to update balance.\n");
+        return;
     }
+
+    // Fetch the new balance to send back to the client
+    std::string fetchBalanceSql = "SELECT usd_balance FROM Users WHERE ID = " + std::to_string(userId) + ";";
+    double newBalance = 0.0;
+    sqlite3_stmt *stmt;
+    if (sqlite3_prepare_v2(db, fetchBalanceSql.c_str(), -1, &stmt, nullptr) == SQLITE_OK) {
+        if (sqlite3_step(stmt) == SQLITE_ROW) {
+            newBalance = sqlite3_column_double(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+    } else {
+        sendMessage(clientSocket, "Error fetching new balance.\n");
+        return;
+    }
+
+    // Send the new balance to the client
+    std::string response = "200 OK\nSOLD: " + std::to_string(stockAmount) + " of " + stockSymbol + ". USD $" + std::to_string(newBalance);
+    sendMessage(clientSocket, response + "\n");
 }
-*/
 
 void processListCommand(int clientSocket) { // working
     // Updated SQL query to include user_id and order by ID for enumeration
@@ -259,7 +288,6 @@ void processBalanceCommand(int clientSocket, const std::string& command) { // wo
     }
     sendMessage(clientSocket, "200 OK\n" + balanceResponse);
 }
-
 
 void processShutdownCommand(int clientSocket) { // working
     sendMessage(clientSocket, "200 OK\nServer shutting down\n");
