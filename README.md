@@ -1,5 +1,4 @@
-## CIS427 Winter 2024 Programming Assignment 1
-## Network Sockets - Stock Trading System
+## CIS427 Winter 2024 Programming Assignment 1 : Network Sockets - Stock Trading System
 
 ### Student Names and Emails
 - Leah Mirch (lmirch@umich.edu)
@@ -91,7 +90,7 @@ SELECT * FROM Stocks;
 ```
 
 ### Each Student's Role
-- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp).
+- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp). Created the makefile, updated the readme with proper configuration settings.
 
 ### Bugs in the Code
 - Database locks may occur if multiple clients try to access the database simultaneously. This is because SQLite's default configuration is not fully optimized for high concurrency. Database allows for multiple clients to access the server, but not to all do commands at once. 
@@ -103,9 +102,6 @@ SELECT * FROM Stocks;
 - **BALANCE**: Check the current balance and stock holdings of a specified user ID.
 - **SHUTDOWN**: Shut down the server gracefully.
 - **QUIT**: Disconnect the client from the server.
-
-### Sample Run
-
 
 ### Additional Information
 Below is the gitub link used within the project. This is so that we can have blame, show progress, and have an established location to transfer code between each other.
