@@ -51,21 +51,41 @@ g++ -o client client.cpp -std=c++11
 ```
 
 #### Inserting Data into the Database
+- connect to umd vpn
+```bash
+ssh lmirch@login.umd.umich.edu
+```
+
+- Enter password
+- Duo authenticate
+
+```bash
+cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
+```
 ```bash
 sqlite3 stock_trading.db
 ```
+
+to populate the users table:
+
 ```bash
-INSERT INTO Users (first_name, last_name, user_name, password, usd_balance) VALUES ('Leah', 'Mirch', 'lmirch', 
+INSERT INTO Users (first_name, last_name, user_name, password, usd_balance) VALUES ('Leah', 'Mirch', 'lmirch', 'Password!', 100.0); 
 ```
-```bash
-'Password!', 100.0); 
-```
+
+to show all users within the users table:
+
 ```bash
 SELECT * FROM Users;
 ```
+
+to populate the stocks table:
+
 ```bash
 INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) VALUES ('GMCA', 'General Motors', 15, 5);
 ```
+
+to show all stocks within the stocks table:
+
 ```bash
 SELECT * FROM Stocks;
 ```
