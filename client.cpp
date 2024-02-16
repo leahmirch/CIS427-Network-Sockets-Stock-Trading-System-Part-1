@@ -2,6 +2,7 @@
 #include <cstring>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "sqlite3.h"
 #include <unistd.h>
 
 #define SERVER_PORT 2025 // Define the server port to connect to
