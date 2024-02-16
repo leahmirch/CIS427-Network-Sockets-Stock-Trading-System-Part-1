@@ -11,8 +11,10 @@ This project is a simple stock trading simulation system built using C++ and SQL
 ```bash
 ssh lmirch@login.umd.umich.edu
 ```
+
     - Enter password
     - Duo authenticate
+
 ```bash
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
 ```
@@ -31,8 +33,10 @@ g++ -g -o server server.cpp sqlite3.o -lpthread -ldl -std=c++11
 ```bash
 ssh lmirch@login.umd.umich.edu
 ```
+
     - Enter password
     - Duo authenticate
+
 ```bash
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
 ```
@@ -49,10 +53,23 @@ g++ -o client client.cpp -std=c++11
 #### Inserting Data into the Database
 ```bash
 sqlite3 stock_trading.db
-INSERT INTO Users (first_name, last_name, user_name, password, usd_balance) VALUES ('Leah', 'Mirch', 'lmirch', 'Password!', 100.0); 
+```
+```bash
+INSERT INTO Users (first_name, last_name, user_name, password, usd_balance) VALUES ('Leah', 'Mirch', 'lmirch', 
+```
+```bash
+'Password!', 100.0); 
+```
+```bash
 SELECT * FROM Users;
+```
+```bash
 INSERT INTO Stocks (stock_symbol, stock_name, stock_balance, user_id) VALUES ('GMCA', 'General Motors', 15, 5);
+```
+```bash
 SELECT * FROM Stocks;
+```
+```bash
 .exit
 ```
 
@@ -71,4 +88,4 @@ SELECT * FROM Stocks;
 - **QUIT**: Disconnect the client from the server.
 
 ### Sample Run
-The output of a sample run can be captured in a recorded video or detailed in a step-by-step text format showing the client-server interaction for each command. For instance, after running the server and client as per the instructions, demonstrate each command's input and the corresponding output from the server.
+
