@@ -1,21 +1,40 @@
-# not working currently
+# Compiler settings - Can change gcc to g++ for C++ setup
+CC = g++
+CFLAGS = -g -std=c++11
+LIBS = -lpthread -ldl
 
+# Project files
+SERVER_SRC = server.cpp
+CLIENT_SRC = client.cpp
+SQLITE_OBJ = sqlite3.o
 
-# Define compiler and flags
-CXX=g++
-CXXFLAGS=-std=c++11 -Wall
-LDFLAGS=-lpthread -ldl
+# Executable names
+SERVER_EXE = server
+CLIENT_EXE = client
+IP = login.umd.umich.edu
 
-# Define targets
-all: server client
+# Compile SQLite3 object file
+$(SQLITE_OBJ): sqlite3.c
+	gcc -c sqlite3.c -o $(SQLITE_OBJ) $(LIBS)
 
-server: server.cpp
-	$(CXX) $(CXXFLAGS) -o server server.cpp sqlite3.o $(LDFLAGS)
+# Default target
+all: $(SERVER_EXE) $(CLIENT_EXE)
 
-client: client.cpp
-	$(CXX) $(CXXFLAGS) -o client client.cpp
+# Compile server
+$(SERVER_EXE): $(SERVER_SRC) $(SQLITE_OBJ)
+	$(CC) $(CFLAGS) -o $(SERVER_EXE) $(SERVER_SRC) $(SQLITE_OBJ) $(LIBS)
 
-.PHONY: clean
+# Compile client
+$(CLIENT_EXE): $(CLIENT_SRC)
+	$(CC) $(CFLAGS) -o $(CLIENT_EXE) $(CLIENT_SRC) $(LIBS)
 
+# Run the server executable
+runserver: $(SERVER_EXE)
+	./$(SERVER_EXE)
+
+runclient: $(CLIENT_EXE)
+	./$(CLIENT_EXE) IP
+
+# Clean the build
 clean:
-	rm -f server client
+	rm -f $(SERVER_EXE) $(CLIENT_EXE) $(SQLITE_OBJ)

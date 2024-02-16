@@ -22,13 +22,13 @@ ssh lmirch@login.umd.umich.edu
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
 ```
 ```bash
-gcc -c sqlite3.c -o sqlite3.o -lpthread -ldl
+make clean
 ```
 ```bash
-g++ -g -o server server.cpp sqlite3.o -lpthread -ldl -std=c++11
+make
 ```
 ```bash
-./server
+make runserver
 ```
 
 #### Running the Client on the UMD Server
@@ -44,13 +44,7 @@ ssh lmirch@login.umd.umich.edu
 cd /home/l/lmirch/Private/code\ base/ *this is assuming you’ve placed the files here*
 ```
 ```bash
-gcc -c sqlite3.c -o sqlite3.o -lpthread -ldl
-```
-```bash
-g++ -o client client.cpp -std=c++11
-```
-```bash
-./server
+make runclient
 ```
 
 #### Inserting Data into the Database
