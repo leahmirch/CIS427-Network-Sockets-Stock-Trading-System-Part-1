@@ -4,6 +4,10 @@
 - Leah Mirch (lmirch@umich.edu)
 - Dominic Baughman (baughboy@umich.edu)
 
+### Youtube DEMO Link
+Here is the link to the demo:
+
+
 ### Introduction
 In this first project for CIS 421, we integrated a Stock Trading System within the netowrk socket. We did this by using C++ for the main code and SQLite for all the database related components. This program uses network programming techniques and and a Unix based system to allow for the client and server to work together. The actions this system can take are BUY, SELL, LIST, BALANCE, SHUTDOWN, and QUIT. 
 
@@ -93,7 +97,7 @@ SELECT * FROM Stocks;
 ```
 
 ### Each Student's Role
-- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp). Created the makefile, updated the readme with proper configuration settings.
+- Leah Mirch: Implemented the server and client communication, database interactions, and the handling of all commands (BUY, SELL, LIST, BALANCE, SHUTDOWN, QUIT). Created the README. Establishing a base for local connectivity. Implimented requirements for the code. Added code comments, added in an established user and stock within the databse. Figured out and established connection to the UMD servers (both client.cpp and server.cpp). Created the makefile- and configured it to download sqlite3.c from the internet, unzip the file, then transform into the object file. Updated the readme with proper configuration settings. 
 - Dominic Baughman: Made changes to the readme, designed a base for the makefile. 
 
 ### Commands Implemented
