@@ -5,7 +5,7 @@
 - Dominic Baughman (baughboy@umich.edu)
 
 ### Youtube DEMO Link
-Here is the link to the demo:
+Here is the link to the demo: https://youtu.be/4TIUKaMNmoA
 
 
 ### Introduction
